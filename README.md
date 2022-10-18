@@ -12,7 +12,7 @@ done using the following commands
 
 ```shell
 cd ~/catkin_ws
-source devel/setup.sh
+source devel/setup.bash
 roslaunch dynamixel_interface dynamixel_interface_controller.launch
 ```
 
@@ -21,7 +21,7 @@ the following
 
 ```shell
 cd ~/catkin_ws
-source devel/setup.sh
+source devel/setup.bash
 roslaunch metr4202_project inverse_kinematics_ROS.py
 ```
 
