@@ -8,6 +8,7 @@ import math
 
 
 def callback(data):
+    rospy.loginfo(data.transforms[1].transform.translation.x)
     rospy.loginfo(data.transforms[0].transform.translation.x)
 
 def listener():

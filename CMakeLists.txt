@@ -70,6 +70,7 @@ find_package(catkin REQUIRED COMPONENTS
 # generate_messages(
 #   DEPENDENCIES
 #   geometry_msgs#   std_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
 
 ################################################
@@ -105,6 +106,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES metr4202_project
 #  CATKIN_DEPENDS geometry_msgs std_msgs
+#  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
 
@@ -115,8 +117,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
+# include ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
