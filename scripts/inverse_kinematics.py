@@ -149,7 +149,7 @@ def IKin_4R(L0, L1, L2, L3_x, L3_y, x, y, z):
     r, theta_0 = cartesian_to_polar(x, y)
 
     # Calibration offset for physical system
-    z += 20
+    # z += 20
 
     theta_1_down, theta_2_down, theta_3_down, theta_1_up, theta_2_up, theta_3_up = \
         IKin_3R(L1, L2, L3_x, L3_y, r, z - L0)
@@ -159,22 +159,24 @@ def IKin_4R(L0, L1, L2, L3_x, L3_y, x, y, z):
 def main():
     L0, L1, L2, L3_x, L3_y = 100, 117.5, 95, 15, 95
 
-    x, y, z = 0, 240, 40
+    x, y, z = 0, 240, 55
 
     theta_0, theta_1_down, theta_2_down, theta_3_down, theta_1_up, theta_2_up, theta_3_up = \
         IKin_4R(L0, L1, L2, L3_x, L3_y, x, y, z)
 
-    # print('Joint Angles:\n\n',
-    #       'theta 4 =', round(np.degrees(theta_0), 3), 'deg\n',
-    #       'theta 3 =', round(np.degrees(theta_1_up), 3), 'deg\n',
-    #       'theta 2 =', round(np.degrees(theta_2_up), 3), 'deg\n',
-    #       'theta 1 =', round(np.degrees(theta_3_up), 3), 'deg\n')
+    # Joint Angle Adjustments for 4R Robot Motor Alignments
+
+    print('Analytical Joint Angles :\n\n',
+          'Joint 4 =', round(np.degrees(-theta_0), 3), 'deg\n',
+          'Joint 3 =', round(np.degrees(np.radians(90) - theta_1_up), 3), 'deg\n',
+          'Joint 2 =', round(np.degrees(-theta_2_up), 3), 'deg\n',
+          'Joint 1 =', round(np.degrees(theta_3_up), 3), 'deg\n')
 
     print('Joint Angles:\n\n',
-          'theta 4 =', round(theta_0, 3), 'rad\n',
-          'theta 3 =', round(np.radians(90) - theta_1_up, 3), 'rad\n',
-          'theta 2 =', round(-theta_2_up, 3), 'rad\n',
-          'theta 1 =', round(theta_3_up, 3), 'rad\n')
+          'Joint 4 =', round(-theta_0, 2), 'rad\n',
+          'Joint 3 =', round(np.radians(90) - theta_1_up, 2), 'rad\n',
+          'Joint 2 =', round(-theta_2_up, 2), 'rad\n',
+          'Joint 1 =', round(theta_3_up, 2), 'rad\n')
 
 if __name__ == '__main__':
     main()
