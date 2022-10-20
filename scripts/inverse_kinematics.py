@@ -43,9 +43,16 @@ def IKin_3R(L1, L2, L3_x, L3_y, x, y):
 
     # Step 1: Calculating the coordinates of the wrist joint
     if x > (L1 + L2) * 0.9:
-        x_wrist = x - L3_y
-        y_wrist = y - L3_x
+        # Gripper parallel from ground
+        # x_wrist = x - L3_y
+        # y_wrist = y - L3_x
+
+        # Gripper at 30 degrees from ground
+        x_wrist = x - L3_x * np.sin(np.radians(30)) - L3_y * np.cos(np.radians(30))
+        y_wrist = y - L3_x * np.cos(np.radians(30)) + L3_y * np.sin(np.radians(30))
+
     else:
+        # Gripper vertical to ground
         x_wrist = x - L3_x
         y_wrist = y + L3_y
 
@@ -68,8 +75,16 @@ def IKin_3R(L1, L2, L3_x, L3_y, x, y):
     theta_2_down = np.pi - beta
 
     if x > (L1 + L2) * 0.9:
-        theta_3_down = np.radians(0) - (theta_1_down + theta_2_down)
+        # Gripper parallel from ground
+        # theta_3_down = np.radians(0) - (theta_1_down + theta_2_down)
+
+        # Gripper at 30 degrees from ground
+        print('Gripper 30Deg')
+        theta_3_down = np.radians(-30) - (theta_1_down + theta_2_down)
+
     else:
+        # Gripper vertical from ground
+        print('Gripper Vertical')
         theta_3_down = np.radians(-90) - (theta_1_down + theta_2_down)
 
     theta_1_up = theta_1_down + 2 * gamma
@@ -97,13 +112,7 @@ def cartesian_to_polar(x, y):
 
     r = np.sqrt(x**2 + y**2)
 
-    # Handle the divide 0 case
-    if y == 0 and x < 0:
-        theta = np.radians(-90)
-    elif y == 0 and x >= 0:
-        theta = np.radians(90)
-    else:
-        theta = -np.arctan(x / y)
+    theta = np.arctan2(y, x) - np.radians(90)
 
     return r, theta
 
@@ -149,7 +158,7 @@ def IKin_4R(L0, L1, L2, L3_x, L3_y, x, y, z):
     r, theta_0 = cartesian_to_polar(x, y)
 
     # Calibration offset for physical system
-    # z += 20
+    # z += 17
 
     theta_1_down, theta_2_down, theta_3_down, theta_1_up, theta_2_up, theta_3_up = \
         IKin_3R(L1, L2, L3_x, L3_y, r, z - L0)
@@ -157,9 +166,9 @@ def IKin_4R(L0, L1, L2, L3_x, L3_y, x, y, z):
     return theta_0, theta_1_down, theta_2_down, theta_3_down, theta_1_up, theta_2_up, theta_3_up
 
 def main():
-    L0, L1, L2, L3_x, L3_y = 100, 117.5, 95, 15, 95
+    L0, L1, L2, L3_x, L3_y = 100, 117.5, 95, 15, 105
 
-    x, y, z = 0, 240, 55
+    x, y, z = 0, 240, 20
 
     theta_0, theta_1_down, theta_2_down, theta_3_down, theta_1_up, theta_2_up, theta_3_up = \
         IKin_4R(L0, L1, L2, L3_x, L3_y, x, y, z)
@@ -172,11 +181,11 @@ def main():
           'Joint 2 =', round(np.degrees(-theta_2_up), 3), 'deg\n',
           'Joint 1 =', round(np.degrees(theta_3_up), 3), 'deg\n')
 
-    print('Joint Angles:\n\n',
-          'Joint 4 =', round(-theta_0, 2), 'rad\n',
-          'Joint 3 =', round(np.radians(90) - theta_1_up, 2), 'rad\n',
-          'Joint 2 =', round(-theta_2_up, 2), 'rad\n',
-          'Joint 1 =', round(theta_3_up, 2), 'rad\n')
+    # print('Joint Angles:\n\n',
+    #       'Joint 4 =', round(-theta_0, 2), 'rad\n',
+    #       'Joint 3 =', round(np.radians(90) - theta_1_up, 2), 'rad\n',
+    #       'Joint 2 =', round(-theta_2_up, 2), 'rad\n',
+    #       'Joint 1 =', round(theta_3_up, 2), 'rad\n')
 
 if __name__ == '__main__':
     main()

@@ -14,7 +14,7 @@ def callback(data):
     elif val > 2:
         val = 2
 
-    rpi.set_servo_pulsewidth(18, int(2000- val * -  500))
+    rpi.set_servo_pulsewidth(18, int(2000- val * 500))
     rospy.loginfo(rospy.get_caller_id() + " New Val:" + str(val * 500 + 1000))
     
 
