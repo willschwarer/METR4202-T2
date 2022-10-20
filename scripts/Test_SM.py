@@ -60,7 +60,6 @@ class Open(smach.State):
         self.rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             self.pub.publish(0)
-            self.rate.sleep()
         return 'open'
 
 def main():

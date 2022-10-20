@@ -13,16 +13,23 @@ def callback(data):
     rospy.loginfo(data.transforms[0].transform.translation.y)
     pub = rospy.Publisher("cube_location", Point32, queue_size=20)
     rate = rospy.Rate(10)
-    while not rospy.is_shutdown():
+
     
-        if len(data.transforms) > 0:
-            offset_translation_x = float(data.transforms[0].transform.translation.x*-1000)
-            offset_translation_y = float(data.transforms[0].transform.translation.y*1000 + 225)
-            offset_translation_z = float(20)
-            print(offset_translation_x,offset_translation_y,offset_translation_z)
-            pub.publish(offset_translation_x,offset_translation_y,offset_translation_z)
+    if len(data.transforms) > 0:
+        dist_to_block = []
+        for fid in data.transforms:
             
-        rate.sleep()
+            dist_to_block.append(np.sqrt((fid.transform.translation.x**2) + (fid.transform.translation.y)**2))
+            
+        print(dist_to_block)
+        cb = np.argmin(dist_to_block)
+        
+        offset_translation_x = float(data.transforms[cb].transform.translation.x*-1000)
+        offset_translation_y = float(data.transforms[cb].transform.translation.y*1000 + 240)
+        offset_translation_z = float(20)
+        print(offset_translation_x,offset_translation_y,offset_translation_z)
+        pub.publish(offset_translation_x,offset_translation_y,offset_translation_z)
+        
 
 def listener():
     rospy.init_node('fid_listener', anonymous=True)
