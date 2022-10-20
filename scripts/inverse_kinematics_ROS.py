@@ -13,6 +13,9 @@ class Inverse_Kinematics_ROS:
     joint_names = ["joint_1", "joint_2", "joint_3", "joint_4"]
 
     def callback(self, msg: Point32):
+        if np.abs(msg.x) < 0.01 and np.abs(msg.y) < 0.01 and np.abs(msg.z) < 0.01:
+            self.theta = [0, 0, 0, 0]
+            return            
         right_angle = np.pi / 2
         L0, L1, L2, L3_x, L3_y = 100, 117.5, 95, 15, 102
         theta_0, theta_1_down, theta_2_down, theta_3_down, theta_1_up, theta_2_up, theta_3_up = \

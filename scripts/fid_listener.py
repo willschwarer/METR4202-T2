@@ -11,7 +11,7 @@ from geometry_msgs.msg import Point32
 def callback(data):
     rospy.loginfo(data.transforms[0].transform.translation.x)
     rospy.loginfo(data.transforms[0].transform.translation.y)
-    pub = rospy.Publisher("cube_location", Point32, queue_size=20)
+    pub = rospy.Publisher("camera_location", Point32, queue_size=20)
     rate = rospy.Rate(10)
 
     
@@ -33,7 +33,7 @@ def callback(data):
 
 def listener():
     rospy.init_node('fid_listener', anonymous=True)
-    pub = rospy.Publisher("cube_location", Point32, queue_size=20)
+    pub = rospy.Publisher("camera_location", Point32, queue_size=20)
     rospy.Subscriber("fiducial_transforms", FTA, callback)
     
 
