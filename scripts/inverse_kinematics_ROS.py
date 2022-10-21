@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import Point32
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Bool
 
 import numpy as np
 import inverse_kinematics
@@ -10,6 +11,7 @@ import inverse_kinematics
 class Inverse_Kinematics_ROS:
     theta = [0.0, 0.0, 0.0, 0.0]
     use_up = True
+    use_reverse = False
     joint_names = ["joint_1", "joint_2", "joint_3", "joint_4"]
 
     def callback(self, msg: Point32):
@@ -28,10 +30,17 @@ class Inverse_Kinematics_ROS:
             rospy.loginfo(rospy.get_caller_id() + "\nCalculated Data: T0: %f, T1: %f, T2: %f, T3: %f", theta_0, theta_1_down, theta_2_down, theta_3_down)
             self.theta = [theta_3_down, -theta_2_down, right_angle - theta_1_down, theta_0]
 
+        if self.use_reverse:
+            self.theta = [-self.theta[0], -self.theta[1], -self.theta[2], self.theta[3]]
+
+    def swap_RK(self, msg:Bool):
+        self.use_reverse = msg.data
+
     def inverse_kinematics_ROS(self):
         rospy.init_node("inverse_kinematics", anonymous=True)
-        self.pub = rospy.Publisher("desired_joint_states", JointState, queue_size=20)
+        self.pub = rospy.Publisher("kinematics_joint_states", JointState, queue_size=20)
         rospy.Subscriber("cube_location", Point32, self.callback)
+        rospy.Subscriber("use_reverse_kinematics", Bool, self.swap_RK)
         self.rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             for i in range(4):

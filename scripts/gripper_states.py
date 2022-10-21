@@ -4,131 +4,191 @@ import rospy
 import smach
 import smach_ros
 from time import sleep
-import threading
 
-from std_msgs.msg import Float32
-from geometry_msgs.msg import Point32
-from sensor_msgs.msg import JointState
+from std_msgs.msg import Float32, String
+
+#Conveyor Moving
 
 class Initial(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['initial'])
-        
-    def execute(self, userdata):
-        rospy.loginfo('Moving to Zero position')
-        self.pub = rospy.Publisher("cube_location", Point32, queue_size=20)
-        #self.rate = rospy.Rate(10)
-        msg = Point32()
-        msg.x = 0.0
-        msg.y = 0.0
-        msg.z = 0.0
-        self.pub.publish(msg)
-        
-        self.pub1 = rospy.Publisher("gripper", Float32, queue_size=10)
+        smach.State.__init__(self, outcomes=["initial"])
+        self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
+        self.grip_pub = rospy.Publisher("gripper", Float32, queue_size=10)
         self.rate = rospy.Rate(10)
-        self.pub1.publish(0.0)
-        
-        sleep(3)
-
-        return 'initial'
-
-class Move(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['move'])
         
     def execute(self, userdata):
-        rospy.loginfo('Moving to cube position')
+        rospy.loginfo("Moving to Zero position")
+        self.move_pub.publish("Zero")
+        self.grip_pub.publish(0.0)
+        sleep(3)
+        return "initial"
+
+class Move_To_Cube(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=["cube"])
+        self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
         
-        self.sub = rospy.Subscriber("camera_location", Point32, self.callback)
+    def execute(self, userdata):
+        rospy.loginfo("Moving to cube position")
+        self.move_pub.publish("Camera")
         
-        #self.threadLock = threading.Lock()
-        #self.threadLock.acquire()
-        #self.threadLock.acquire(True)
-        #self.threadLock.release()
-        
+        #Get callback to determine time
         sleep(5)
-        
-        return 'move'
-        
-    def callback(self, msg: Point32):
-        rospy.loginfo('Recieved Camera Location')
-        self.pub = rospy.Publisher("cube_location", Point32, queue_size=10)
-        self.pub.publish(msg.x,msg.y,msg.z)
-        #self.threadLock.release()
-        #wait
-        
-        sleep(4)
-        
-        
-
-
-# define gripper grab state
+        return "cube"
+   
 class Grip(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['grab'])
-    def execute(self, userdata):
-        rospy.loginfo('Executing state Grip')
+        smach.State.__init__(self, outcomes=["grab"])
         self.pub = rospy.Publisher("gripper", Float32, queue_size=10)
-        #self.rate = rospy.Rate(10)
+        self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
+
+    def execute(self, userdata):
+        rospy.loginfo("Gripping cube")
+        self.move_pub.publish("Hold")
         msg = Float32()
         msg.data = 1.2
-        self.pub.publish(msg)
+        self.grip_pub.publish(msg)
         sleep(1)
-        return 'grab'
+        return "grab"
 
-class Open(smach.State):
+class Move_Up(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['open'])
+        smach.State.__init__(self, outcomes=["up"])
+        self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
+        
     def execute(self, userdata):
-        rospy.loginfo('Executing state Open')
-        self.pub = rospy.Publisher("gripper", Float32, queue_size=10)
+        rospy.loginfo("Moving cube up")
+        self.move_pub.publish("Up")
+        
+        #Get callback to determine time
+        sleep(5)
+        return "up"
+
+class Move_To_Camera(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=["camera"])
+        self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
+
+    def execute(self, userdata):
+        rospy.loginfo("Holding cube to camera")
+        self.move_pub.publish("Colour")
+        sleep(2)
+        return "camera"
+
+class Check_Colour(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=["red","yellow","green","blue","none"])
+        self.color_sub = rospy.Subscriber("detected_color",String, self.callback)
+        self.zone = "NONE"
+    
+    def callback(self, msg:String):
+        rospy.loginfo("callback works?")
+        self.zone = msg.data
+
+    def execute(self, userdata):
+        rospy.loginfo("Checking colour")
+
+        if self.zone == "RED":
+            return "red"
+        elif self.zone == "YELLOW":
+            return "yellow"
+        elif self.zone == "GREEN":
+            return "green"
+        elif self.zone == "BLUE":
+            return "blue"
+        return "none"
+
+class Move_To_Zone_1(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=["zone_1"])
+        self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
+        
+    def execute(self, userdata):
+        rospy.loginfo("Moving red cube to zone 1")
+        self.move_pub.publish("Zone_1")
+        
+        #Get callback to determine time
+        sleep(5)
+        return "zone_1"
+
+class Move_To_Zone_2(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=["zone_2"])
+        self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
+        
+    def execute(self, userdata):
+        rospy.loginfo("Moving yellow cube to zone 2")
+        self.move_pub.publish("Zone_2")
+        
+        #Get callback to determine time
+        sleep(5)
+        return "zone_2"
+
+class Move_To_Zone_3(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=["zone_3"])
+        self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
+        
+    def execute(self, userdata):
+        rospy.loginfo("Moving green cube to zone 3")
+        self.move_pub.publish("Zone_3")
+        
+        #Get callback to determine time
+        sleep(5)
+        return "zone_3"
+
+class Move_To_Zone_4(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=["zone_4"])
+        self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
+
+    def execute(self, userdata):
+        rospy.loginfo("Moving blue cube to zone 4")
+        self.move_pub.publish("Zone_4")
+        
+        #Get callback to determine time
+        sleep(5)
+        return "zone_4"
+
+class Release(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=["release"])
+        self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
         self.rate = rospy.Rate(10)
-        self.pub.publish(0.0)
-        sleep(1)
-        return 'open'
 
-class Drop(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['drop'])
-        
     def execute(self, userdata):
-        rospy.loginfo('Dropping to cube at zone')
-        
-        #self.sub = rospy.Subscriber("camera_location", Point32, self.callback)
-        
-        #wait
-        
-        return 'drop'
-        
+        rospy.loginfo("Releasing cube")
+        self.move_pub.publish("Hold")
+        self.grip_pub.publish(0.0)
+        sleep(1)
+        return "release"
 
 def main():  
-    rospy.init_node('test_state_machine_2')
+    rospy.init_node("State_Machine")
     
     # Create a SMACH state machine
-    sm = smach.StateMachine(outcomes=['grip'])
+    sm = smach.StateMachine(outcomes=["grip"])
     
     # Open the container
     with sm:
         # Add states to the container
-        smach.StateMachine.add('Initial', Initial(), 
-                               transitions={'initial':'Move'})
-        
-        smach.StateMachine.add('Move', Move(), 
-                               transitions={'move':'Grip'})
-        
-        smach.StateMachine.add('Grip', Grip(), 
-                               transitions={'grab':'Open'})
-                               
-        smach.StateMachine.add('Drop', Drop(), 
-                               transitions={'drop':'Open'})
-                             
-        smach.StateMachine.add('Open', Open(), 
-                               transitions={'open':'Initial'})
+        smach.StateMachine.add("Initial", Initial(), transitions={"initial":"Move_To_Cube"})
+        smach.StateMachine.add("Move_To_Cube", Move_To_Cube(), transitions={"cube":"Grip"})
+        smach.StateMachine.add("Grip", Grip(), transitions={"grab":"Move_Up"})
+        smach.StateMachine.add("Move_Up", Move_Up(), transitions={"up":"Move_To_Camera"})
+        smach.StateMachine.add("Move_To_Camera", Move_To_Camera(), transitions={"camera":"Check_Colour"})
+        smach.StateMachine.add("Check_Colour", Check_Colour(), transitions={"red":"Move_To_Zone_1",
+                "yellow":"Move_To_Zone_2","green":"Move_To_Zone_3","blue":"Move_To_Zone_4","none":"Move_To_Cube"})
+        smach.StateMachine.add("Move_To_Zone_1", Move_To_Zone_1(), transitions={"zone_1":"Release"})
+        smach.StateMachine.add("Move_To_Zone_2", Move_To_Zone_2(), transitions={"zone_2":"Release"})
+        smach.StateMachine.add("Move_To_Zone_3", Move_To_Zone_3(), transitions={"zone_3":"Release"})
+        smach.StateMachine.add("Move_To_Zone_4", Move_To_Zone_4(), transitions={"zone_4":"Release"})
+        smach.StateMachine.add("Release", Release(), transitions={"release":"Initial"})
+
     # Execute SMACH plan
     outcome = sm.execute()
     rospy.spin()
 
 
-if __name__ == '__main__':
-    print(11)   
+if __name__ == "__main__":
     main()
