@@ -162,8 +162,10 @@ def IKin_4R(L0, L1, L2, L3_x, L3_y, x, y, z):
         z += 15
     elif r >= 192 and r < 200:
         z += 10
+        r += 8
     elif r >= 200:
         z += -0.05 * r + 30
+        r += 8
 
     theta_1_down, theta_2_down, theta_3_down, theta_1_up, theta_2_up, theta_3_up = \
         IKin_3R(L1, L2, L3_x, L3_y, r, z - L0)

@@ -3,8 +3,9 @@
 import rospy
 import smach
 import smach_ros
+import numpy as np
 from time import sleep
-
+from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Float32, String
 from fiducial_msgs.msg import FiducialTransformArray as FTA
 #Conveyor Moving
@@ -16,15 +17,14 @@ class Initial(smach.State):
         self.grip_pub = rospy.Publisher("gripper", Float32, queue_size=10)
         self.rate = rospy.Rate(10)
         
-        
-    
     
     def execute(self, userdata):
         rospy.loginfo("Moving to Zero position")
         self.move_pub.publish("Zero")
         self.grip_pub.publish(0.0)
-        
+        sleep(1)
         return "initial"
+
 
 class Move_To_Cube(smach.State):
     def __init__(self):
@@ -32,20 +32,33 @@ class Move_To_Cube(smach.State):
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
         self.block_sub = rospy.Subscriber("fiducial_transforms", FTA, self.callback)
         self.cube_counter = 0
+        self.yaw = 0
+        self.spinning = 0
 
     def callback(self, msg: FTA):
         self.cube_counter = len(msg.transforms) 
 
+        if self.cube_counter > 0:
+            orientation = msg.transforms[0].transform.rotation
+            orient_list = [orientation.x, orientation.y, orientation.z, orientation.w]
+            (roll_next, pitch_next, yaw_next) = euler_from_quaternion(orient_list)
+
+            if np.abs(self.yaw - yaw_next) < 0.01:
+                self.spinning += 1
+            else:
+                self.spinning = 0
+            self.yaw = yaw_next
+
+
     def execute(self, userdata):
-        while self.cube_counter == 0:
+        while self.cube_counter == 0 or self.spinning < 3:
             pass # Wait for a cube
-        sleep(3)
 
         rospy.loginfo("Moving to cube position")
         self.move_pub.publish("Camera")
         
         #Get callback to determine time
-        sleep(5)
+        sleep(3)
         return "cube"
    
 class Grip(smach.State):
@@ -60,7 +73,7 @@ class Grip(smach.State):
         msg = Float32()
         msg.data = 1.2
         self.grip_pub.publish(msg)
-        sleep(1)
+        sleep(0.3)
         return "grab"
 
 class Move_Up_Conveyor(smach.State):
@@ -84,7 +97,7 @@ class Move_To_Camera(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Holding cube to camera")
         self.move_pub.publish("Colour")
-        sleep(4)
+        sleep(3)
         return "camera"
 
 class Check_Colour(smach.State):
@@ -120,7 +133,7 @@ class Move_To_Zone_1(smach.State):
         self.move_pub.publish("Zone_1")
         
         #Get callback to determine time
-        sleep(5)
+        sleep(4)
         return "zone_1"
 
 class Move_To_Zone_2(smach.State):
@@ -133,7 +146,7 @@ class Move_To_Zone_2(smach.State):
         self.move_pub.publish("Zone_2")
         
         #Get callback to determine time
-        sleep(5)
+        sleep(4)
         return "zone_2"
 
 class Move_To_Zone_3(smach.State):
@@ -146,7 +159,7 @@ class Move_To_Zone_3(smach.State):
         self.move_pub.publish("Zone_3")
         
         #Get callback to determine time
-        sleep(5)
+        sleep(4)
         return "zone_3"
 
 class Move_To_Zone_4(smach.State):
@@ -159,7 +172,7 @@ class Move_To_Zone_4(smach.State):
         self.move_pub.publish("Zone_4")
         
         #Get callback to determine time
-        sleep(5)
+        sleep(4)
         return "zone_4"
 
 class Release(smach.State):
@@ -173,7 +186,7 @@ class Release(smach.State):
         rospy.loginfo("Releasing cube")
         self.move_pub.publish("Hold")
         self.grip_pub.publish(0.0)
-        sleep(1)
+        sleep(0.3)
         return "release"
 
 class Move_Up_Zone(smach.State):
@@ -183,7 +196,7 @@ class Move_Up_Zone(smach.State):
         
     def execute(self, userdata):
         rospy.loginfo("Moving cube up from zone")
-        self.move_pub.publish("Up")
+        self.move_pub.publish("Zup")
         
         #Get callback to determine time
         sleep(1)
