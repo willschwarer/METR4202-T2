@@ -15,7 +15,7 @@ class Initial(smach.State):
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
         self.grip_pub = rospy.Publisher("gripper", Float32, queue_size=10)
         self.rate = rospy.Rate(10)
-        self.cube_counter = 0
+        
         
     
     
@@ -30,7 +30,8 @@ class Move_To_Cube(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=["cube"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
-        self.block_sub = rospy.Subscriber("fiducial_transforms", FTA, callback)
+        self.block_sub = rospy.Subscriber("fiducial_transforms", FTA, self.callback)
+        self.cube_counter = 0
 
     def callback(self, msg: FTA):
         self.cube_counter = len(msg.transforms) 
@@ -39,7 +40,7 @@ class Move_To_Cube(smach.State):
         while self.cube_counter == 0:
             pass # Wait for a cube
         sleep(3)
-        
+
         rospy.loginfo("Moving to cube position")
         self.move_pub.publish("Camera")
         
