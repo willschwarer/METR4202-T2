@@ -6,7 +6,7 @@ import smach_ros
 import numpy as np
 from time import sleep
 from tf.transformations import euler_from_quaternion
-from std_msgs.msg import Float32, String
+from std_msgs.msg import Float32, String, Int32
 from fiducial_msgs.msg import FiducialTransformArray as FTA
 #Conveyor Moving
 
@@ -30,14 +30,13 @@ class Move_To_Cube(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=["cube"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
-        self.block_sub = rospy.Subscriber("fiducial_transforms", FTA, self.callback)
         self.cube_counter = 0
+        self.count_sub = rospy.Subscriber("block_counter", Int32, self.counter_callback)
+        self.block_sub = rospy.Subscriber("fiducial_transforms", FTA, self.fiducial_callback)
         self.yaw = 0
         self.spinning = 0
 
-    def callback(self, msg: FTA):
-        self.cube_counter = len(msg.transforms) 
-
+    def fiducial_callback(self, msg: FTA):
         if self.cube_counter > 0:
             orientation = msg.transforms[0].transform.rotation
             orient_list = [orientation.x, orientation.y, orientation.z, orientation.w]
@@ -49,6 +48,8 @@ class Move_To_Cube(smach.State):
                 self.spinning = 0
             self.yaw = yaw_next
 
+    def counter_callback(self, msg: Int32):
+        self.cube_counter = msg.data
 
     def execute(self, userdata):
         while self.cube_counter == 0 or self.spinning < 3:
