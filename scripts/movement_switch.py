@@ -88,8 +88,8 @@ class Movement_Switch:
                 self.camera_counter = 0
             self.location_pub.publish(self.cube_location)
             self.joint_pub.publish(self.desired_joint_states)
-            print(self.cube_location)
-            print(self.desired_joint_states)
+            # print(self.cube_location)
+            # print(self.desired_joint_states)
             self.rate.sleep()
             
 try:

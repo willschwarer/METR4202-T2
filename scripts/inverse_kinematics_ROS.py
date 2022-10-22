@@ -24,10 +24,8 @@ class Inverse_Kinematics_ROS:
             inverse_kinematics.IKin_4R(L0, L1, L2, L3_x, L3_y, msg.x, msg.y, msg.z)
 
         if self.use_up:
-            rospy.loginfo(rospy.get_caller_id() + "\nCalculated Data: T0: %f, T1: %f, T2: %f, T3: %f", theta_0, theta_1_up, theta_2_up, theta_3_up)
             self.theta = [theta_3_up, -theta_2_up, right_angle - theta_1_up, theta_0]
         else:
-            rospy.loginfo(rospy.get_caller_id() + "\nCalculated Data: T0: %f, T1: %f, T2: %f, T3: %f", theta_0, theta_1_down, theta_2_down, theta_3_down)
             self.theta = [theta_3_down, -theta_2_down, right_angle - theta_1_down, theta_0]
 
         if self.use_reverse:

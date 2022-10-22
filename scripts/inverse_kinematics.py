@@ -1,10 +1,3 @@
-"""
-Name: Chris Smith
-Student Number: 44803625
-Course: METR4202 - UQ
-Assignment: Team Project
-Doc: 4R Gripper Inverse Kinematics
-"""
 
 import numpy as np
 
@@ -79,12 +72,10 @@ def IKin_3R(L1, L2, L3_x, L3_y, x, y):
         # theta_3_down = np.radians(0) - (theta_1_down + theta_2_down)
 
         # Gripper at 30 degrees from ground
-        print('Gripper 30Deg')
         theta_3_down = np.radians(-30) - (theta_1_down + theta_2_down)
 
     else:
         # Gripper vertical from ground
-        print('Gripper Vertical')
         theta_3_down = np.radians(-90) - (theta_1_down + theta_2_down)
 
     theta_1_up = theta_1_down + 2 * gamma
