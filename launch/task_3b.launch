@@ -1,0 +1,16 @@
+<launch>
+    <include file="$(find dynamixel_interface)/launch/dynamixel_interface_controller.launch" />
+
+    <node pkg="ximea_color" name="ximea_color_detect" type="ximea_color_detect" />
+    <node pkg="ximea_color" name="image_node" type="example_camera.py" />
+
+    <node pkg="metr4202_project" name="movement_switch" type="movement_switch.py" output="screen" />
+    <node pkg="metr4202_project" name="inverse_kinematics" type="inverse_kinematics_ROS.py" output="screen" />
+    <node pkg="metr4202_project" name="servo_interface_node" type="servo_interface.py" output="screen" />
+    <node pkg="ximea_ros" name="ximea_demo" type="ximea_demo" output="screen" />
+    <include file="$(find ximea_ros)/launch/ximea_aruco.launch">
+        <arg name ="serial" value="31701451" />
+    </include>
+    <node pkg="metr4202_project" name="motion_transforms" type="motion_transforms.py" output="screen" />
+     
+</launch>

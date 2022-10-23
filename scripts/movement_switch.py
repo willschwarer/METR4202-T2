@@ -64,7 +64,7 @@ class Movement_Switch:
                 self.camera_counter += 1
             elif self.source == "Up":
                 self.rk_pub.publish(False)
-                self.cube_location.z = 120.0
+                self.cube_location.z = 140.0
                 self.desired_joint_states = self.kinematics_joint_states
             elif self.source == "Zup":
                 self.rk_pub.publish(True)

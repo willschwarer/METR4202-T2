@@ -7,10 +7,27 @@ from geometry_msgs.msg import Point32
 from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Int32
 
+y_cam = 0.235
+
 class Block_Transforms:
     def obstruction(self, x1, y1, x2, y2):
-        return np.sqrt((x1 - x2)**2 + (y1 - y2)**2) < 0.05
+    #    return np.sqrt((x1 - x2)**2 + (y1 - y2)**2) < 0.05
+        block_len = 32/1000 # mm
 
+        dist_between = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+        dist1 = np.sqrt(x1**2 + y1**2)
+
+        dist2 = np.sqrt(x2**2 + y2**2)
+
+        if dist_between < 1.5 * block_len:
+            # Block is inside a potential collision radius
+            if dist2 < dist1 + 0.5 * block_len:
+                # Block2 is NOT behind block 1 and is a collison
+                return True
+
+        return False
+  
     def callback(self, data):
         
         if len(data.transforms) > 0:
@@ -19,8 +36,8 @@ class Block_Transforms:
             pop_list = []
             for i in range(1, original_length):
                 for j in range(i):
-                    if self.obstruction(desired[i].transform.translation.x, desired[i].transform.translation.y + 0.22, 
-                    desired[j].transform.translation.x, desired[j].transform.translation.y + 0.22):
+                    if self.obstruction(desired[i].transform.translation.x, desired[i].transform.translation.y + y_cam, 
+                    desired[j].transform.translation.x, desired[j].transform.translation.y + y_cam):
                         pop_list.append(i)
                         pop_list.append(j)
 
@@ -31,18 +48,17 @@ class Block_Transforms:
 
             
             dist_to_block = []
-            felicitous = []
+            felicitous = [] #look up what this means
             for fid in desired:
                 orientation = fid.transform.rotation
                 orient_list = [orientation.x, orientation.y, orientation.z, orientation.w]
                 (roll, pitch, yaw) = euler_from_quaternion(orient_list)
                 
-                i_yaw = np.arctan2(fid.transform.translation.y + 0.22, fid.transform.translation.x)
-                
+                i_yaw = np.arctan2(fid.transform.translation.y + y_cam, fid.transform.translation.x)
                 
                 a_yaw = abs(i_yaw - (yaw % np.radians(90)))
                 print(np.degrees(a_yaw))
-                dist = np.sqrt((fid.transform.translation.x**2) + ((fid.transform.translation.y + 0.22))**2)
+                dist = np.sqrt((fid.transform.translation.x**2) + ((fid.transform.translation.y + y_cam))**2)
                 if a_yaw < np.radians(35) or a_yaw > np.radians(55) or dist < 0.9 * 0.2125:
                     dist_to_block.append(dist)
                     felicitous.append(fid)
@@ -52,7 +68,7 @@ class Block_Transforms:
                 cb = np.argmin(dist_to_block)
                 
                 offset_translation_x = float(felicitous[cb].transform.translation.x * -1000)
-                offset_translation_y = float(felicitous[cb].transform.translation.y * 1000 + 220)
+                offset_translation_y = float(felicitous[cb].transform.translation.y * 1000 + y_cam * 1000)
                 offset_translation_z = float(20)
                 print(offset_translation_x,offset_translation_y, offset_translation_z)
                 self.counter_pub.publish(len(felicitous))

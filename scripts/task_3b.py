@@ -8,14 +8,17 @@ from time import sleep
 from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Float32, String, Int32
 from fiducial_msgs.msg import FiducialTransformArray as FTA
+#Conveyor Moving
+
+y_centre = 0.045
 
 class Initial(smach.State):
-    #robot starts in zero configuration with gripper open
     def __init__(self):
         smach.State.__init__(self, outcomes=["initial"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
         self.grip_pub = rospy.Publisher("gripper", Float32, queue_size=10)
         self.rate = rospy.Rate(10)
+        
     
     def execute(self, userdata):
         rospy.loginfo("Moving to Zero position")
@@ -24,42 +27,29 @@ class Initial(smach.State):
         sleep(1)
         return "initial"
 
+
 class Move_To_Cube(smach.State):
-    #camera gets the cube position and robot uses inverse kinematics to move there 
     def __init__(self):
         smach.State.__init__(self, outcomes=["cube"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
         self.cube_counter = 0
-        self.count_sub = rospy.Subscriber("block_counter", Int32, self.counter_callback)
-        self.block_sub = rospy.Subscriber("fiducial_transforms", FTA, self.fiducial_callback)
-        self.yaw = 0
-        self.spinning = 0
-
-    def fiducial_callback(self, msg: FTA):
-        if self.cube_counter > 0:
-            orientation = msg.transforms[0].transform.rotation
-            orient_list = [orientation.x, orientation.y, orientation.z, orientation.w]
-            (roll_next, pitch_next, yaw_next) = euler_from_quaternion(orient_list)
-
-            if np.abs(self.yaw - yaw_next) < 0.01:
-                self.spinning += 1
-            else:
-                self.spinning = 0
-            self.yaw = yaw_next
+        self.count_sub = rospy.Subscriber("block_counter", Int32, self.counter_callback)       
 
     def counter_callback(self, msg: Int32):
         self.cube_counter = msg.data
 
     def execute(self, userdata):
-        while self.cube_counter == 0 or self.spinning < 3:
-            pass # wait for a cube
+        while self.cube_counter == 0:
+            pass # Wait for a cube
+
         rospy.loginfo("Moving to cube position")
         self.move_pub.publish("Camera")
+        
+        #Get callback to determine time
         sleep(3)
         return "cube"
    
 class Grip(smach.State):
-    #gripper closes to grab the cube
     def __init__(self):
         smach.State.__init__(self, outcomes=["grab"])
         self.grip_pub = rospy.Publisher("gripper", Float32, queue_size=10)
@@ -71,11 +61,10 @@ class Grip(smach.State):
         msg = Float32()
         msg.data = 1.2
         self.grip_pub.publish(msg)
-        sleep(0.3)
+        sleep(3.5)
         return "grab"
 
 class Move_Up_Conveyor(smach.State):
-    #robot lifts cube upwards to ensure no collisions or other cubes are knocked
     def __init__(self):
         smach.State.__init__(self, outcomes=["cup"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
@@ -89,7 +78,6 @@ class Move_Up_Conveyor(smach.State):
         return "cup"
 
 class Move_To_Camera(smach.State):
-    #robot lifts cube to the camera to detect the colour
     def __init__(self):
         smach.State.__init__(self, outcomes=["camera"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
@@ -101,17 +89,18 @@ class Move_To_Camera(smach.State):
         return "camera"
 
 class Check_Colour(smach.State):
-    #camera gets the colour of the cube
     def __init__(self):
         smach.State.__init__(self, outcomes=["red","yellow","green","blue","none"])
         self.color_sub = rospy.Subscriber("detected_color",String, self.callback)
         self.zone = "NONE"
     
     def callback(self, msg:String):
+        # rospy.loginfo("callback works?")
         self.zone = msg.data
 
     def execute(self, userdata):
         rospy.loginfo("Checking colour")
+
         if self.zone == "RED":
             return "red"
         elif self.zone == "YELLOW":
@@ -123,7 +112,6 @@ class Check_Colour(smach.State):
         return "none"
 
 class Move_To_Zone_1(smach.State):
-    #robot moves red cube to zone 1
     def __init__(self):
         smach.State.__init__(self, outcomes=["zone_1"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
@@ -137,7 +125,6 @@ class Move_To_Zone_1(smach.State):
         return "zone_1"
 
 class Move_To_Zone_2(smach.State):
-    #robot moves yellow cube to zone 2
     def __init__(self):
         smach.State.__init__(self, outcomes=["zone_2"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
@@ -151,7 +138,6 @@ class Move_To_Zone_2(smach.State):
         return "zone_2"
 
 class Move_To_Zone_3(smach.State):
-    #robot moves green cube to zone 3
     def __init__(self):
         smach.State.__init__(self, outcomes=["zone_3"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
@@ -165,7 +151,6 @@ class Move_To_Zone_3(smach.State):
         return "zone_3"
 
 class Move_To_Zone_4(smach.State):
-    #robot moves blue cube to zone 4
     def __init__(self):
         smach.State.__init__(self, outcomes=["zone_4"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
@@ -205,6 +190,8 @@ class Move_Up_Zone(smach.State):
         sleep(1)
         return "zup"
 
+
+
 def main():  
     rospy.init_node("State_Machine")
     
@@ -231,6 +218,7 @@ def main():
     # Execute SMACH plan
     outcome = sm.execute()
     rospy.spin()
+
 
 if __name__ == "__main__":
     main()
