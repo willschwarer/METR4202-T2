@@ -55,7 +55,7 @@ class Move_To_Cube(smach.State):
             pass # wait for a cube
         rospy.loginfo("Moving to cube position")
         self.move_pub.publish("Camera")
-        sleep(3)
+        sleep(2)
         return "cube"
    
 class Grip(smach.State):
@@ -83,8 +83,6 @@ class Move_Up_Conveyor(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving cube up")
         self.move_pub.publish("Up")
-        
-        #Get callback to determine time
         sleep(1.5)
         return "cup"
 
@@ -131,9 +129,7 @@ class Move_To_Zone_1(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving red cube to zone 1")
         self.move_pub.publish("Zone_1")
-        
-        #Get callback to determine time
-        sleep(4)
+        sleep(3)
         return "zone_1"
 
 class Move_To_Zone_2(smach.State):
@@ -145,9 +141,7 @@ class Move_To_Zone_2(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving yellow cube to zone 2")
         self.move_pub.publish("Zone_2")
-        
-        #Get callback to determine time
-        sleep(4)
+        sleep(3)
         return "zone_2"
 
 class Move_To_Zone_3(smach.State):
@@ -159,9 +153,7 @@ class Move_To_Zone_3(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving green cube to zone 3")
         self.move_pub.publish("Zone_3")
-        
-        #Get callback to determine time
-        sleep(4)
+        sleep(3)
         return "zone_3"
 
 class Move_To_Zone_4(smach.State):
@@ -173,12 +165,11 @@ class Move_To_Zone_4(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving blue cube to zone 4")
         self.move_pub.publish("Zone_4")
-        
-        #Get callback to determine time
-        sleep(4)
+        sleep(3)
         return "zone_4"
 
 class Release(smach.State):
+    #gripper releases cube in zone
     def __init__(self):
         smach.State.__init__(self, outcomes=["release"])
         self.grip_pub = rospy.Publisher("gripper", Float32, queue_size=10)
@@ -193,6 +184,7 @@ class Release(smach.State):
         return "release"
 
 class Move_Up_Zone(smach.State):
+    #robot lifts gripper upwards to ensure no cube is not knocked over
     def __init__(self):
         smach.State.__init__(self, outcomes=["zup"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
@@ -200,20 +192,19 @@ class Move_Up_Zone(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving cube up from zone")
         self.move_pub.publish("Zup")
-        
-        #Get callback to determine time
         sleep(1)
         return "zup"
 
 def main():  
+    #initialise node
     rospy.init_node("State_Machine")
     
-    # Create a SMACH state machine
+    #ceate a SMACH state machine
     sm = smach.StateMachine(outcomes=["grip"])
     
-    # Open the container
+    #open container
     with sm:
-        # Add states to the container
+        #add each state to container
         smach.StateMachine.add("Initial", Initial(), transitions={"initial":"Move_To_Cube"})
         smach.StateMachine.add("Move_To_Cube", Move_To_Cube(), transitions={"cube":"Grip"})
         smach.StateMachine.add("Grip", Grip(), transitions={"grab":"Move_Up_Conveyor"})
@@ -228,7 +219,7 @@ def main():
         smach.StateMachine.add("Release", Release(), transitions={"release":"Move_Up_Zone"})
         smach.StateMachine.add("Move_Up_Zone", Move_Up_Zone(), transitions={"zup":"Initial"})
 
-    # Execute SMACH plan
+    #execute SMACH plan
     outcome = sm.execute()
     rospy.spin()
 

@@ -7,7 +7,7 @@ from geometry_msgs.msg import Point32
 from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Int32
 
-y_cam = 0.235
+y_cam = 0.19
 
 class Block_Transforms:
     def obstruction(self, x1, y1, x2, y2):
@@ -69,7 +69,7 @@ class Block_Transforms:
                 
                 offset_translation_x = float(felicitous[cb].transform.translation.x * -1000)
                 offset_translation_y = float(felicitous[cb].transform.translation.y * 1000 + y_cam * 1000)
-                offset_translation_z = float(20)
+                offset_translation_z = float(25)
                 print(offset_translation_x,offset_translation_y, offset_translation_z)
                 self.counter_pub.publish(len(felicitous))
                 self.location_pub.publish(offset_translation_x, offset_translation_y, offset_translation_z)

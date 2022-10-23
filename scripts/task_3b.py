@@ -8,9 +8,8 @@ from time import sleep
 from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Float32, String, Int32
 from fiducial_msgs.msg import FiducialTransformArray as FTA
-#Conveyor Moving
 
-y_centre = 0.045
+y_centre = 0 #0.045
 
 class Initial(smach.State):
     def __init__(self):
@@ -43,10 +42,11 @@ class Move_To_Cube(smach.State):
             pass # Wait for a cube
 
         rospy.loginfo("Moving to cube position")
-        self.move_pub.publish("Camera")
-        
-        #Get callback to determine time
-        sleep(3)
+        sleep(2.5)
+        self.move_pub.publish("Camera_Track")
+        sleep(0.5)
+        self.move_pub.publish("Hold")
+        sleep(3.5)
         return "cube"
    
 class Grip(smach.State):
@@ -61,7 +61,7 @@ class Grip(smach.State):
         msg = Float32()
         msg.data = 1.2
         self.grip_pub.publish(msg)
-        sleep(3.5)
+        sleep(0.3)
         return "grab"
 
 class Move_Up_Conveyor(smach.State):
@@ -72,9 +72,7 @@ class Move_Up_Conveyor(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving cube up")
         self.move_pub.publish("Up")
-        
-        #Get callback to determine time
-        sleep(1.5)
+        sleep(1)
         return "cup"
 
 class Move_To_Camera(smach.State):
@@ -85,7 +83,7 @@ class Move_To_Camera(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Holding cube to camera")
         self.move_pub.publish("Colour")
-        sleep(3)
+        sleep(2)
         return "camera"
 
 class Check_Colour(smach.State):
@@ -95,7 +93,6 @@ class Check_Colour(smach.State):
         self.zone = "NONE"
     
     def callback(self, msg:String):
-        # rospy.loginfo("callback works?")
         self.zone = msg.data
 
     def execute(self, userdata):
@@ -119,9 +116,7 @@ class Move_To_Zone_1(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving red cube to zone 1")
         self.move_pub.publish("Zone_1")
-        
-        #Get callback to determine time
-        sleep(4)
+        sleep(3)
         return "zone_1"
 
 class Move_To_Zone_2(smach.State):
@@ -132,9 +127,7 @@ class Move_To_Zone_2(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving yellow cube to zone 2")
         self.move_pub.publish("Zone_2")
-        
-        #Get callback to determine time
-        sleep(4)
+        sleep(3)
         return "zone_2"
 
 class Move_To_Zone_3(smach.State):
@@ -145,9 +138,7 @@ class Move_To_Zone_3(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving green cube to zone 3")
         self.move_pub.publish("Zone_3")
-        
-        #Get callback to determine time
-        sleep(4)
+        sleep(3)
         return "zone_3"
 
 class Move_To_Zone_4(smach.State):
@@ -158,9 +149,7 @@ class Move_To_Zone_4(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving blue cube to zone 4")
         self.move_pub.publish("Zone_4")
-        
-        #Get callback to determine time
-        sleep(4)
+        sleep(3)
         return "zone_4"
 
 class Release(smach.State):
@@ -173,7 +162,7 @@ class Release(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Releasing cube")
         self.move_pub.publish("Hold")
-        self.grip_pub.publish(0.0)
+        self.grip_pub.publish(0)
         sleep(0.3)
         return "release"
 
@@ -185,9 +174,7 @@ class Move_Up_Zone(smach.State):
     def execute(self, userdata):
         rospy.loginfo("Moving cube up from zone")
         self.move_pub.publish("Zup")
-        
-        #Get callback to determine time
-        sleep(1)
+        sleep(0.5)
         return "zup"
 
 

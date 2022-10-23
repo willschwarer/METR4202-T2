@@ -20,6 +20,7 @@ class Movement_Switch:
 
     def kinematics_callback(self, msg: JointState):
         self.kinematics_joint_states = msg
+        self.kinematics_joint_states.velocity = [1, 1, 1, 1]
 
     def current_joint_callback(self, msg: JointState):
         current_joint_states = msg
@@ -39,6 +40,7 @@ class Movement_Switch:
         self.kinematics_joint_states = JointState()
         self.kinematics_joint_states.name = ["joint_1", "joint_2", "joint_3", "joint_4"]
         self.kinematics_joint_states.position = [0, 0, 0, 0]
+        self.kinematics_joint_states.velocity = [1, 1, 1, 1]
         self.desired_joint_states = self.kinematics_joint_states
         self.current_joint_states = JointState()
         self.rate = rospy.Rate(10)
@@ -49,6 +51,7 @@ class Movement_Switch:
                 self.desired_joint_states = JointState()
                 self.desired_joint_states.name = ["joint_1", "joint_2", "joint_3", "joint_4"]
                 self.desired_joint_states.position = [0, 0, 0, 0]
+                self.desired_joint_states.velocity = [1, 1, 1, 1]
             elif self.source == "Camera_Track":
                 self.rk_pub.publish(False)
                 self.cube_location = self.camera_location
@@ -71,17 +74,32 @@ class Movement_Switch:
                 self.desired_joint_states = JointState()
                 self.desired_joint_states.name = ["joint_1", "joint_2", "joint_3", "joint_4"]
                 self.desired_joint_states.position = [0.78, -1.3, -0.8, self.zone_angles[self.last_zone]]
+                self.desired_joint_states.velocity = [1, 1, 1, 1]
             elif self.source == "Colour":
                 self.rk_pub.publish(True)
                 self.desired_joint_states = JointState()
                 self.desired_joint_states.name = ["joint_1", "joint_2", "joint_3", "joint_4"]
-                self.desired_joint_states.position = [0, 0, 0.7, 0]
+                self.desired_joint_states.position = [0, 0, 0.56, 0]
+                self.desired_joint_states.velocity = [1, 1, 1, 1]
+            elif self.source == "Throw":
+                self.rk_pub.publish(True)
+                self.desired_joint_states = JointState()
+                self.desired_joint_states.name = ["joint_1", "joint_2", "joint_3", "joint_4"]
+                self.desired_joint_states.position = [-1.4, 1.4, 0, 0]
+                self.desired_joint_states.velocity = [1, 1, 1, 1]
+            elif self.source == "Yeet":
+                self.rk_pub.publish(False)
+                self.desired_joint_states = JointState()
+                self.desired_joint_states.name = ["joint_1", "joint_2", "joint_3", "joint_4"]
+                self.desired_joint_states.position = [0, 0, 0, 0]
+                self.desired_joint_states.velocity = [3, 3, 3, 3]
             elif self.source in self.zone_names:
                 self.last_zone = self.zone_names.index(self.source)
                 self.rk_pub.publish(True)
                 self.desired_joint_states = JointState()
                 self.desired_joint_states.name = ["joint_1", "joint_2", "joint_3", "joint_4"]
                 self.desired_joint_states.position = [0.78, -1.3, -1.09, self.zone_angles[self.last_zone]]
+                self.desired_joint_states.velocity = [1, 1, 1, 1]
 
 
             if self.source != "Camera":
