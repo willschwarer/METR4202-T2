@@ -36,10 +36,6 @@ def IKin_3R(L1, L2, L3_x, L3_y, x, y):
 
     # Step 1: Calculating the coordinates of the wrist joint
     if x > (L1 + L2) * 0.9:
-        # Gripper parallel from ground
-        # x_wrist = x - L3_y
-        # y_wrist = y - L3_x
-
         # Gripper at 30 degrees from ground
         x_wrist = x - L3_x * np.sin(np.radians(30)) - L3_y * np.cos(np.radians(30))
         y_wrist = y - L3_x * np.cos(np.radians(30)) + L3_y * np.sin(np.radians(30))
@@ -68,12 +64,8 @@ def IKin_3R(L1, L2, L3_x, L3_y, x, y):
     theta_2_down = np.pi - beta
 
     if x > (L1 + L2) * 0.9:
-        # Gripper parallel from ground
-        # theta_3_down = np.radians(0) - (theta_1_down + theta_2_down)
-
         # Gripper at 30 degrees from ground
         theta_3_down = np.radians(-30) - (theta_1_down + theta_2_down)
-
     else:
         # Gripper vertical from ground
         theta_3_down = np.radians(-90) - (theta_1_down + theta_2_down)
@@ -173,11 +165,11 @@ def main():
 
     # Joint Angle Adjustments for 4R Robot Motor Alignments
 
-    print('Analytical Joint Angles :\n\n',
-          'Joint 4 =', round(np.degrees(-theta_0), 3), 'deg\n',
-          'Joint 3 =', round(np.degrees(np.radians(90) - theta_1_up), 3), 'deg\n',
-          'Joint 2 =', round(np.degrees(-theta_2_up), 3), 'deg\n',
-          'Joint 1 =', round(np.degrees(theta_3_up), 3), 'deg\n')
+    # print('Analytical Joint Angles :\n\n',
+    #       'Joint 4 =', round(np.degrees(-theta_0), 3), 'deg\n',
+    #       'Joint 3 =', round(np.degrees(np.radians(90) - theta_1_up), 3), 'deg\n',
+    #       'Joint 2 =', round(np.degrees(-theta_2_up), 3), 'deg\n',
+    #       'Joint 1 =', round(np.degrees(theta_3_up), 3), 'deg\n')
 
     # print('Joint Angles:\n\n',
     #       'Joint 4 =', round(-theta_0, 2), 'rad\n',

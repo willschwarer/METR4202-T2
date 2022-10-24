@@ -12,22 +12,23 @@ from fiducial_msgs.msg import FiducialTransformArray as FTA
 y_centre = 0 #0.045
 
 class Initial(smach.State):
+    # Robot starts in zero configuration with the gripper open
     def __init__(self):
         smach.State.__init__(self, outcomes=["initial"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
         self.grip_pub = rospy.Publisher("gripper", Float32, queue_size=10)
         self.rate = rospy.Rate(10)
-        
-    
+
     def execute(self, userdata):
+        # Move robot and grippper to zero configuration
         rospy.loginfo("Moving to Zero position")
         self.move_pub.publish("Zero")
         self.grip_pub.publish(0.0)
         sleep(1)
         return "initial"
 
-
 class Move_To_Cube(smach.State):
+    # Camera gets cube position and robot uses inverse kinematics to catch position 
     def __init__(self):
         smach.State.__init__(self, outcomes=["cube"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
@@ -35,9 +36,11 @@ class Move_To_Cube(smach.State):
         self.count_sub = rospy.Subscriber("block_counter", Int32, self.counter_callback)       
 
     def counter_callback(self, msg: Int32):
+        # Set cube counter to read from the camera the number of cubes 
         self.cube_counter = msg.data
 
     def execute(self, userdata):
+        # Wait for a cube to be on conveyor, then move to a position to grab it 
         while self.cube_counter == 0:
             pass # Wait for a cube
 
@@ -50,6 +53,7 @@ class Move_To_Cube(smach.State):
         return "cube"
    
 class Grip(smach.State):
+    # Close gripper to grap cube 
     def __init__(self):
         smach.State.__init__(self, outcomes=["grab"])
         self.grip_pub = rospy.Publisher("gripper", Float32, queue_size=10)
@@ -65,10 +69,11 @@ class Grip(smach.State):
         return "grab"
 
 class Move_Up_Conveyor(smach.State):
+    # Robot lifts cube upwards, ensuring no collisions 
     def __init__(self):
         smach.State.__init__(self, outcomes=["cup"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
-        
+
     def execute(self, userdata):
         rospy.loginfo("Moving cube up")
         self.move_pub.publish("Up")
@@ -76,6 +81,7 @@ class Move_Up_Conveyor(smach.State):
         return "cup"
 
 class Move_To_Camera(smach.State):
+    # Robot lifts cube to the camera to detect the colour 
     def __init__(self):
         smach.State.__init__(self, outcomes=["camera"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
@@ -87,15 +93,17 @@ class Move_To_Camera(smach.State):
         return "camera"
 
 class Check_Colour(smach.State):
+    # Camera gets the colour of the cube 
     def __init__(self):
         smach.State.__init__(self, outcomes=["red","yellow","green","blue","none"])
         self.color_sub = rospy.Subscriber("detected_color",String, self.callback)
         self.zone = "NONE"
-    
+
     def callback(self, msg:String):
         self.zone = msg.data
 
     def execute(self, userdata):
+        # Determine the colour of the cube 
         rospy.loginfo("Checking colour")
 
         if self.zone == "RED":
@@ -109,50 +117,59 @@ class Check_Colour(smach.State):
         return "none"
 
 class Move_To_Zone_1(smach.State):
+    # Robot moves red cube to zone 1 
     def __init__(self):
         smach.State.__init__(self, outcomes=["zone_1"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
-        
+
     def execute(self, userdata):
+        # Use inverse kinematics to move cube
         rospy.loginfo("Moving red cube to zone 1")
         self.move_pub.publish("Zone_1")
         sleep(3)
         return "zone_1"
 
 class Move_To_Zone_2(smach.State):
+    # Robot moves yellow cube to zone 2
     def __init__(self):
         smach.State.__init__(self, outcomes=["zone_2"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
-        
+
     def execute(self, userdata):
+        # Use inverse kinematics to move cube
         rospy.loginfo("Moving yellow cube to zone 2")
         self.move_pub.publish("Zone_2")
         sleep(3)
         return "zone_2"
 
 class Move_To_Zone_3(smach.State):
+    # Robot moves green cube to zone 3 
     def __init__(self):
         smach.State.__init__(self, outcomes=["zone_3"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
-        
+
     def execute(self, userdata):
+        # Use inverse kinematics to move cube
         rospy.loginfo("Moving green cube to zone 3")
         self.move_pub.publish("Zone_3")
         sleep(3)
         return "zone_3"
 
 class Move_To_Zone_4(smach.State):
+    # Robot moves blue cube to zone 4 
     def __init__(self):
         smach.State.__init__(self, outcomes=["zone_4"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
 
     def execute(self, userdata):
+        # Use inverse kinematics to move cube
         rospy.loginfo("Moving blue cube to zone 4")
         self.move_pub.publish("Zone_4")
         sleep(3)
         return "zone_4"
 
 class Release(smach.State):
+    # Gripper releases the cube in its zone 
     def __init__(self):
         smach.State.__init__(self, outcomes=["release"])
         self.grip_pub = rospy.Publisher("gripper", Float32, queue_size=10)
@@ -160,6 +177,7 @@ class Release(smach.State):
         self.rate = rospy.Rate(10)
 
     def execute(self, userdata):
+        # Move gripper position to 0 to release cube 
         rospy.loginfo("Releasing cube")
         self.move_pub.publish("Hold")
         self.grip_pub.publish(0)
@@ -167,27 +185,29 @@ class Release(smach.State):
         return "release"
 
 class Move_Up_Zone(smach.State):
+    # Robot lifts gripper upwards to ensure no collisions 
     def __init__(self):
         smach.State.__init__(self, outcomes=["zup"])
         self.move_pub = rospy.Publisher("movement_source", String, queue_size=20)
-        
+
     def execute(self, userdata):
+        # Use inverse kinematics to move upwards 
         rospy.loginfo("Moving cube up from zone")
         self.move_pub.publish("Zup")
         sleep(0.5)
         return "zup"
 
-
-
-def main():  
+def main():
+    # Initialise node 
     rospy.init_node("State_Machine")
-    
+
     # Create a SMACH state machine
     sm = smach.StateMachine(outcomes=["grip"])
-    
+
     # Open the container
     with sm:
         # Add states to the container
+        # Set up transitions between states. Given a state and outcome, transition to the next state  
         smach.StateMachine.add("Initial", Initial(), transitions={"initial":"Move_To_Cube"})
         smach.StateMachine.add("Move_To_Cube", Move_To_Cube(), transitions={"cube":"Grip"})
         smach.StateMachine.add("Grip", Grip(), transitions={"grab":"Move_Up_Conveyor"})
@@ -205,7 +225,6 @@ def main():
     # Execute SMACH plan
     outcome = sm.execute()
     rospy.spin()
-
 
 if __name__ == "__main__":
     main()
